@@ -6,13 +6,18 @@ import { generateHash, verifyHash } from "../helper/authentication.service";
 
 export const signUp = async (req: Request, res: Response) => {
   try {
-    const errors = validationResult(req.body);
+    const { first_name, last_name, email, password } = req.body;
+    const errors = validationResult(req);    
     if (!errors.isEmpty()) {
-      res.status(500).json({
-        message: errors,
+      return res.status(400).json({
+        errors : errors.array().map(error => error.msg),
+        message: "Validation Error",
       });
     }
-    const { first_name, last_name, email, password } = req.body;
+    const exist = await User.findOne({ email });
+    if(exist){
+      return res.status(409).json({ message: "User already exist" });
+    }
     const hashedpass = await generateHash(password);
     const newUser = new User({
       _id: new mongoose.Types.ObjectId(),
@@ -24,7 +29,7 @@ export const signUp = async (req: Request, res: Response) => {
     newUser
       .save()
       .then((result) => {
-        res.status(201).json({
+        return res.status(201).json({
           user: result,
           message: "User registered Successfully",
         });
@@ -32,7 +37,7 @@ export const signUp = async (req: Request, res: Response) => {
       .catch((err) => {
         return res.status(500).json({
           message: "User Registration Failed",
-          reason : err
+          reason : err.message
         });
       });
   } catch (error: any) {
@@ -42,24 +47,25 @@ export const signUp = async (req: Request, res: Response) => {
 
 export const signIn = async (req: Request, res: Response) => {
   try {
-    const errors = validationResult(req.body);
+    const { email, password } = req.body;
+    const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(500).json({
-        message: errors,
+      return res.status(400).json({
+        errors : errors.array().map(error => error.msg),
+        message: "Validation errors",
       });
     }
-    const { email, password } = req.body;
     const dbuser = await User.findOne({ email });
     if (dbuser) {
       const isValid = await verifyHash(password, dbuser.password);
       if (isValid) {
-        res.status(200).json({ message: "Sign in successful" });
+        return res.status(200).json({ message: "Sign in successful" });
       } else {
-        res.status(401).json({ message: "Invalid credentials" });
+        return res.status(401).json({ message: "Invalid credentials" });
       }
     }
     else{
-      res.status(404).json({ message: "User Not found" });
+      return res.status(404).json({ message: "User Not found" });
     }
   } catch (error: any) {
     res.status(500).json({ message: error.message });

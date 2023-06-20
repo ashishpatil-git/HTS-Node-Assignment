@@ -4,14 +4,14 @@ import { check } from 'express-validator';
 const router = express.Router();
 
 const signUpValidations = [
-    check('first_name').trim().isLength({ min: 3 }).escape().withMessage('first_name required'),
-    check('last_name').trim().isLength({ min: 3 }).escape().withMessage('last_name required'),
-    check('email').trim().isEmail().normalizeEmail().withMessage('Enter valid email'),
-    check('password').trim().isLength({ min: 8 }).escape().withMessage('password required')
+    check('first_name').trim().isLength({ min: 3 }).withMessage('first_name required').escape(),
+    check('last_name').trim().isLength({ min: 3 }).withMessage('last_name required').escape(),
+    check('email').trim().isEmail().normalizeEmail().withMessage('valid email is required'),
+    check('password').trim().isLength({ min: 8 }).withMessage('password must be 8 characters or more').escape()
 ];
 const signInValidations = [
-    check('email').trim().isEmail().normalizeEmail().withMessage('Enter valid email'),
-    check('password').trim().isLength({ min: 8 }).escape().withMessage('password required')
+    check('email').trim().isEmail().normalizeEmail().withMessage('valid email is required'),
+    check('password').trim().isLength({ min: 8 }).withMessage('password must be 8 characters or more').escape()
 ];
 
 router.post('/signup',signUpValidations, signUp);
